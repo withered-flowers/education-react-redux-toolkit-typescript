@@ -8,6 +8,7 @@
 - [Redux Toolkit Query](#redux-toolkit-query)
 - [Let's Demo (Redux Toolkit)](#lets-demo-redux-toolkit)
   - [Langkah 1 - Inisialisasi Project](#langkah-1---inisialisasi-project)
+  - [Langkah 2 - Mulai RTK (duoCounter)](#langkah-2---mulai-rtk-duocounter)
 - [Let's Demo (RTK Query)](#lets-demo-rtk-query)
 
 ## Disclaimer & Prerequisites
@@ -56,6 +57,24 @@ Langkah langkah untuk inisialisasi projectnya adalah sebagai berikut:
    - [pnpm] pnpm install react-redux @reduxjs/toolkit
 
 1. Sampai pada tahap ini artinya kita sudah siap untuk menuliskan kode kita untuk menggunakan React dengan RTK yah !
+
+### Langkah 2 - Mulai RTK (duoCounter)
+
+Selanjutnya pada langkah ini kita akan memindahkan state `duoCounter` yang ada pada `/src/pages/CounterPage.tsx` ke `Global State` (State yang bisa diakses dari Component manapun) via `RTK`.
+
+Langkah yang harus dilakukan adalah sebagai berikut:
+
+1. Pertama-tama kita akan memindahkan state dan segala macam fungsi perubahan statenya menjadi sebuah `reducer function` yang dimiliki oleh `duoCounter`.
+
+   Karena di dalam React ini sebenarnya `unopinionated`, maka sebenarnya tidak ada folder yang pasti untuk menaruh `reducer function` nya dimana.
+
+   Mungkin pada saat menggunakan `Redux`, teman-teman pada saat membaca dokumentasinya adalah menggunakan folder `reducers` (`/src/reducers`).
+
+   Namun pada saat menggunakan `RTK`, folder yang disarankan adalah `features` (`src/features`), dimana kita akan membuat `reducer function`-nya. Dimana di dalam RTK, namanya menjadi suatu `slice`.
+
+   Jadi pada langkah selanjutnya kita akan membuat sebuah `slice` di dalam `/src/features`
+
+1.
 
 ## Redux Toolkit Query
 
