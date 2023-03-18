@@ -67,10 +67,23 @@ export const counterSlice = createSlice({
       state.firstCounter += 1;
     },
 
-    incrementSecondCounterByAmount: (
-      state,
-      action: PayloadAction<number>
-    ) => {},
+    // Fungsi (2)
+    // Fungsi ini akan menerima dua buah parameter
+    //   - state dengan tipe data WritableDraft dari tipe state yang dibuat
+    //     (WritableDraft<DuoCounter>)
+    //   - action dengan tipe data PayloadAction dengan menyertakan tipe data yang ingin diterima
+    //     e.g. PayloadAction<number>
+    //       Hal ini menyatakan bahwa action, yang merupakan sebuah object
+    //       akan memiliki dua buah property yang akan digunakan di untuk memutasi state, yaitu:
+    //          action.type => tipe data string, yang menyatakan "logic" dalam memilih
+    //                         aksi yang akan dilakukan
+    //          action.payload => tipe data sesuai yang diberikan <number>, brarti menjadi number
+    //                            merupakan inputan yang diterima
+    incrementSecondCounterByAmount: (state, action: PayloadAction<number>) => {
+      // Pada logic yang ada di sini, kita menginginkan
+      // duoCounter akan bertambah sesuai dengan payload (number) yang diberikan
+      state.duoCounter += action.payload;
+    },
   },
 });
 
