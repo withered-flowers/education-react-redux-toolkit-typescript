@@ -87,4 +87,7 @@ export const counterSlice = createSlice({
   },
 });
 
-export default DuoCounter;
+export const { incrementFirstCounter, incrementSecondCounterByAmount } =
+  counterSlice.actions;
+
+export default counterSlice.reducer;
