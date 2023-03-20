@@ -18,7 +18,7 @@ Pada pembelajaran ini diharapkan Anda sudah:
 - Mengerti tentang React dan bagaimana cara membuat Custom Hooks
 - Mengerti tentang konsep Reducer dan bagaimana cara membuat Reducer Function
 - Mengerti sedikit tentang dasar TypeScript
-- [OPTIONAL] Mengerti penggunakan Redux (Non-Toolkit)
+- [OPTIONAL] Mengerti penggunakan Redux (Non-Toolkit) + Redux Thunk
 - [OPTIONAL] Sudah membaca tentang pembelajaran sebelumnya mengenai [React Router TypeScript ver](https://education.withered-flowers.dev/education-react-router-typescript/)
 
 Pada pembelajaran ini Anda diharapkan:
@@ -473,6 +473,62 @@ Langkah yang harus dilakukan adalah sebagai berikut:
    **(Sambil di-copy-paste sambil dibaca yah comment-nya !)**
 
    Perhatikan bahwa pada kode ini kita tetap menggunakan `useState` yah, hanya saja untuk kebutuhan yang lebih simpel saja (menyimpan form input value)
+
+Sampai pada titik ini artinya kita sudah berhasil untuk menggunakan RTK loh, SELAMAT YAH !
+
+Ternyata RTK tidak begitu sulit bukan jadinya?
+
+(Hanya saja karena ini TypeScript version, jadi ada beberapa data type yang harus dihafal yah 😭)
+
+Nah sekarang kita akan naik ke level berikutnya.
+
+> Bagiamana bila ada data sifatnya tidak menentu?
+
+Sebagai contoh adalah: Pada saat kita melakukan fetch data, hasil tidak tentu bukan? bisa saja berhasil, bisa saja gagal.
+
+Nah hal ini TIDAK BISA dilakukan / dimasukkan secara langsung ke dalam `reducers` yang ada di dalam `slice`.
+
+Karena di dalam `reducer` merupakan fungsi murni (**pure function**) yang harus bisa di-prediksi outputnya seperti apa, tidak boleh ada yang tidak bisa di-prediksi, atau umumnya disebut efek samping (**side effect**).
+
+Untuk itu sebenarnya bisa saja kita menuliskan logicnya adalah sebagai berikut:
+
+```
+(Tidak berupa kode lengkap yah, hanya gambaran)
+
+// slice
+type DataExernal
+
+state: {
+   dataDariExternal: ...
+}
+
+reducer: setDataDariExternal(state, action: PayloadAction<DataExternal>) {
+   state.dataDariExternal = action.payload
+}
+
+// Component
+const Component = () => {
+   useEffect(() => {
+      (async () => {
+         const response = await fetch(...);
+         const responseJson: DataExternal = await fetch.json();
+
+         // Anggap ini useAppDispatch
+         dispatcher(setDataDariExternal(responseJson));
+      })()
+   });
+}
+```
+
+Tapi pada akhirnya bila RTK hanya berfungsi sebagai setter / getter dari sebuah state saja, **Apa gunanya donk?**
+
+Untuk itu sebenarnya kita bisa saja menggunakan tambahan lainnya yang bernama `Middleware` untuk menambahkan `Redux Thunk` ataupun library lainnya ke dalam `Redux` agar dapat men-"delay" eksekusi reducer function dan menjalankan **side effect** (e.g. fetch) terlebih dahulu sebelum menggunakan reducer functionnya
+
+> TL;DR: Menyelipkan fungsi yang sifatnya tidak menentu di tengah perjalanan reducer function, sehingga bisa menerima data yang sifatnya tidak menentu / side effect.
+
+Nah permasalahannya adalah: penggunaan `Middleware` ini konfigurasinya cukup sulit dan pada akhirnya akan menuliskan state serta reducer yang cukup banyak.
+
+Untuk itu tim RTK sendiri memperkenalkan sesuatu untuk menyelesaikan permasalahan ini, namanya adalah `Redux Toolkit Query`
 
 ## Redux Toolkit Query
 
