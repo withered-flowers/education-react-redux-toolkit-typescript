@@ -1906,10 +1906,12 @@ Langkah-langkahnya adalah sebagai berikut:
 
 Sampai pada langkah ini, artinya kita sudah berhasil menggunakan RTK Query untuk melakukan `POST /users` dari `https://reqres.in/api` yah !
 
-Selamat, sampai pada titik ini artinya kita sudah mempelajari cara pakai `RTK` dan `RTK Query` **yang sederhana** dengan baik.
+Selamat, sampai pada titik ini artinya kita sudah mempelajari cara pakai `RTK` dan `RTK Query` **yang sederhana** dengan baik dan sudah menggunakan TypeScript yah (sambil belajar beberapa tipe data / utils pada TypeScript).
 
 Selanjutnya sebenarnya masih ada cara penggunaan `RTK Query` untuk bisa melakukan automatic re-fetch (data bisa fetch ulang) ataupun menggunakan `cache` dengan baik.
 
 Tapi itu untuk dipelajari secara mandiri yah.
 
 Semoga materi ini bisa membantu teman-teman 🥰
+
+Tetap semangat belajar !
