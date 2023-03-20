@@ -11,6 +11,7 @@
   - [Langkah 2 - Mulai RTK (duoCounter)](#langkah-2---mulai-rtk-duocounter)
 - [Let's Demo (RTK Query)](#lets-demo-rtk-query)
   - [Langkah 1 - Mulai RTK Query (Fetch All Comments)](#langkah-1---mulai-rtk-query-fetch-all-comments)
+  - [Langkah 2 - Melanjutkan RTK Query (Fetch Comments by Id)](#langkah-2---melanjutkan-rtk-query-fetch-comments-by-id)
 
 ## Disclaimer & Prerequisites
 
@@ -1000,3 +1001,302 @@ Dokumentasi:
 Sampai pada titik ini, artinya kita sudah berhasil untuk melakukan pencomotan data dari `jsonplaceholder` dengan menggunakan `RTK Query` versi TypeScript dengan baik.
 
 Cukup mudah bukan 😊 ?
+
+Memang magic untuk RTK Query ini cukup banyak, namun, bila kita sudah mengetahui magicnya, menggunakan RTK Query ini sebenarnya tidak terlalu sulit yah !
+
+Selanjutnya kita akan mencoba lagi untuk menggunakan yang versi memiliki parameter yah, yaitu untuk melakukan fetching comment berdasarkan id yang diberikan (tombol **Detail**)
+
+### Langkah 2 - Melanjutkan RTK Query (Fetch Comments by Id)
+
+Pada langkah ini kita akan coba untuk mengubah kode yang ada pada `/src/pages/CommentDetailPage.tsx` yang semula menggunakan `useEffect` saja dengan menggunakan `RTK Query`, kira kira jadinya bagaimana yah? 🤔
+
+Mari kita coba untuk melihatnya dengan mengikuti langkah langkah berikut:
+
+1. Buka kembali file `/src/schemas/comment.ts` dan pindahkan type `CommentDetail` dari `/src/pages/CommentDetailPage.tsx` ke dalam `comment.ts`, sehingga kode akhirnya menjadi seperti berikut:
+
+   ```ts
+   export type Comment = {
+     id: number;
+     email: string;
+     body: string;
+   };
+
+   // TODO: RTK Query - Fetch Comments By Id (1)
+   // Karena sekarang CommentDetail akan digunakan pada services
+   // Ada baiknya kita type pindahkan CommentDetail dari pages/CommentDetailPage.tsx ke sini
+   export type CommentDetail = Comment & {
+     postId: number;
+     name: string;
+   };
+   ```
+
+1. Buka kembali file `jsonplaceholder.ts` dan kemudian tambahkan sebuah endpoint dengan nama `getCommentById` dan export hooks dengan nama `useGetCommentByIdQuery`. Modifikasi file `/src/services/jsonplaceholder.ts` menjadi sebagai berikut:
+
+   (Lihat: `TODO: RTK Query - Fetch Comments By Id`)
+
+   ```ts
+   // Ingat bahwa services ini sifatnya juga akan membuat reducer function
+   // sehingga ekstensinya adalah .ts bukan .tsx yah !
+
+   // Import method yang dibutuhkan untuk membuat service
+   // Service di sini adalah suatu kumpulan fungsi yang digunakan untuk menembak suatu API
+
+   // Ada kemungkinan fungsi ini tidak bisa ditemukan secara langsung
+   // Karena ada banyak slash di dalamnya
+   // Sehingga harus ditulis manual
+   import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+
+   // Karena type Comment kita ada di luar file ini, jadinya kita harus import juga
+   // TODO: RTK Query - Fetch Comments By Id (2)
+   // Karena di sini kita menggunakan CommentDetail, jangan lupa diimport
+   import type { Comment, CommentDetail } from "../schemas/comment";
+
+   // ----- HATI HATI BANYAK MAGIC YANG DIBUAT DI DALAM SINI ! -----
+   // ----- BACA PERLAHAN-LAHAN UNTUK BISA MENGERTI MAKSUDNYA ! -----
+
+   // Sekarang di sini kita akan mendefinisikan service yang dibutuhkan dengan menggunakan
+   // Suatu base URL dan endpoint yang harus ditembak
+
+   // Di sini kita akan menggunakan createApi
+
+   // Ini adalah fungsi bawaan dari RTK Query yang akan membuatkan kita
+   // Reducer, Action, dan State yang dibutuhkan untuk mencomot data dari API tertentu
+   // SECARA OTOMATIS !
+
+   // Sehingga walaupun di dalam sini akan ada reducer, action, dan state yang seharusnya kita buat
+   // namun kita tidak perlu memikirkan hal ini, karena sudah di-abstraksi-kan oleh createApi ini
+   export const jsonPlaceholderAPI = createApi({
+     // Di dalam Object ini ada beberapa props yang harus disediakan:
+     // - reducerPath, ini merupakan key yang akan dituliskan dan bersifat HARUS UNIQUE
+     //      (anggap saja ini adalah nama alias untuk dimasukkan ke dalam store)
+     reducerPath: "jsonPlaceholderAPI",
+
+     // - baseQuery: ini adalah fungsi untuk mendefinisikan baseURL dari endpoint yang akan dibuat
+     //      di sini kita akan menggunakan fetchBaseQuery
+
+     // Fungsi fetchBaseQuery ini akan menerima sebuah Object
+     //      yang harus memiliki baseUrl yang didefinisikan
+     baseQuery: fetchBaseQuery({
+       // Biasakan untuk baseUrl ini menuliskan `/` di belakangnya
+       baseUrl: "https://jsonplaceholder.typicode.com/",
+     }),
+
+     // - endpoints: ini merupakan endpoint mana saja berdasarkan baseUrl ini data akan dicomot
+     //      endpoints ini akan berupa suatu fungsi yang akan membuat actionCreator dan reducer nya
+     //      SECARA OTOMATIS !
+
+     //   endpoints ini berupa sebuah fungsi yang akan menerima parameter "builder"
+     //      builder ini juga merupakan sebuah Object yang memiliki props "query" dan "mutation"
+
+     //      builder.query (Function): mirip dengan method GET
+     //      builder.mutation (Function): mirip dengan method sisanya (POST PUT PATCH DELETE)
+     endpoints: (builder) => ({
+       // Di sini kita bisa mendefinisikan fungsi apa yang kita butuhkan untuk melakukan fetch data
+
+       // Karena di sini kita akan melakukan fetching comments seluruhnya, maka di sini kita akan
+       // memberikan nama fungsinya adalah getComments
+
+       // Di sini karena kita akan melakukan method GET, maka kita mengetahui bahwa kita akan
+       // membuat suatu query, oleh karena itu kita akan menggunakan builder.query
+
+       // Supaya TypeScript mengetahui kembalian datanya seperti apa,
+       // maka kita akan mendefinisikannya
+       // di dalam Generic <TipeDataKembalian, TipeDataInputan>
+
+       // Karena getComments ini akan mengembalikan Array of Type Comment
+       // dan tidak menerima input apapun
+
+       // Maka di sini kita akan menuliskannya sebagai builder.query<Comment[], void>
+       getComments: builder.query<Comment[], void>({
+         // builder.query merupakan suatu fungsi yang akan menerima suatu Object
+         // di dalam Object ini kita membutuhkan sebuah props: "query"
+         //    "query": sebuah fungsi yang membutuhkan suatu parameter berupa
+         //             input-an dari query yang akan ditembak
+
+         //             Fungsi ini akan mengembalikan sebuah Object
+         //             yang membutuhkan property suatu "url"
+
+         //             Atau bisa mengembalikan langsung string saja
+         //             () => Object | string
+
+         // Pada saat kita menembak ke https://jsonplaceholder.typicode.com/comments
+         // kita tidak membutuhkan input, sehingga pada fungsi query di bawah
+         // parameternya adalah kosong
+         query: () => ({
+           url: "comments",
+         }),
+         // Bisa juga dituliskan dengan shorthand langsung url sebagai berikut
+         // query: () => "comments"
+
+         // Gunakan cara Object bila ingin melakukan transformResponse / transformErrorResponse
+         // Gunakan cara shorthand bila ingin semua diotomasi oleh RTK Query
+
+         // FYI:
+         // Untuk yang membutuhkan response yang diubah
+         // Misalnya: kembalian JSONnya tidak tepat dan butuh diubah supaya tepat
+
+         // RTK Query sudah menyediakan juga yang dinamakan dengan transformResponse
+         // https://redux-toolkit.js.org/rtk-query/usage/customizing-queries#customizing-query-responses-with-transformresponse
+       }),
+
+       // TODO: RTK Query - Fetch Comments By Id (3)
+       // Sekarang di sini kita akan menambahkan sebuah Endpoint yang baru
+
+       // karena ini akan mengambil comment berdasarkan id, sebut saja namanya adalah
+       // "getCommentById"
+
+       // Karena getCommentById ini harapannya akan mengembalikan sebuah CommentDetail,
+       // dan membutuhkan parameter berupa id dari CommentDetail yang akan diambil
+       // Maka cara membuat builder.query nya sekarang berbeda dengan yang ada di atas
+
+       // Akan kita buat Genericnya menjadi <CommentDetail, number>
+
+       // Maksudnya adalah:
+       // - TipeDataOutput dari fetch-er ini adalah CommentDetail
+       // - TipeDataInput dari fetch-er ini adalah number
+
+       // FYI:
+       // Input di sini HANYA boleh menerima satu saja variabelnya <TipeDataInput>
+       // Apabila input-nya lebih dari satu, WAJIB dibuatkan Type-nya terlebih dahulu
+       // Sehingga nanti akan berupa suatu Object yang bisa menerima banyak property
+       getCommentById: builder.query<CommentDetail, number>({
+         // Pada saat kita menembak ke https://jsonplaceholder.typicode.com/comments/{id}
+         // Kita membutuhkan input berupa id
+
+         // Seharusnya TypeScript tidak mengerti bahwa id yang dimaksud adalah suatu number
+         // Namun, karena pada builder.query kita sudah mendefinisikan Generic Type untuk
+         // Inputnya <TipeDataOutput, TipeDataInput> nya adalah suatu number
+
+         // Sehingga di sini, apabila id-nya kita hover, TypeScript akan mengetahui
+         // bahwa id ini akan memiliki tipe data "number"
+
+         // Menarik bukan?
+         query: (id) => ({
+           url: `comments/${id}`,
+         }),
+       }),
+     }),
+   });
+
+   // Nah pertanyaannya sekarang adalah, kalau sebanyak ini yang diotomasi:
+   // Q: Bagaimana cara kita menggunakannya di dalam Component yang akan kita buat nanti?
+   // A: Dengan menggunakan Hooks !
+
+   // Lalu pertanyaan selanjutnya adalah:
+   // Q: Hooks nya dapat dari mana? Bikin sendiri?
+   // A: OTOMATIS ! dari RTK Query !
+
+   // Sekarang kita perlu untuk meng-export Hooks yang otomatis ini supaya bisa digunakan di dalam
+   // Component yang digunakan
+
+   // Caranya adalah dengan....
+   // Cukup export saja !
+
+   // Jadi sebenarnya pada saat kita membuat service dengan menggunakan createApi
+   // Untuk setiap endpoints yang dibuat, akan secara OTOMATIS dibuatkan Hooks-nya
+
+   // Penamaan hooksnya adalah sebagai berikut:
+   // use<NamaFunctionDiDalamEndpoints>Query bila menggunakan builder.query
+   // use<NamaFunctionDiDalamEndpoints>Mutation bila menggunakan builder.mutation
+
+   // Karena di dalam endpoints nama nya adalah getComments dan dibuat dengan builder.query
+   // maka yang diexport hooks nya adalah useGetCommentsQuery
+   export const {
+     useGetCommentsQuery,
+     // TODO: RTK Query - Fetch Comments By Id (4)
+     // Di sini kita akan menambahkan Hooks untuk getCommentById
+     // yaitu useGetCommentByIdQuery
+     useGetCommentByIdQuery,
+   } = jsonPlaceholderAPI;
+   ```
+
+   **(Sambil di-copy-paste sambil dibaca yah comment-nya !)**
+
+1. Selanjutnya kita akan memodifikasi `CommentDetailPage.tsx` untuk bisa menggunakan Hooks yang sudah dibuat secara otomatis, yaitu `useGetCommentByIdQuery`. Buka kembali file `/src/pages/CommentDetailPage.tsx` kemudian modifikasi filenya menjadi sebagai berikut:
+
+   (Lihat: `TODO: RTK Query - Fetch Comments By Id`)
+
+   ```tsx
+   import { useEffect, useState } from "react";
+   import { useParams } from "react-router-dom";
+   // TODO: RTK Query - Fetch Comments By Id (5)
+   // Comment import Comment dan type CommentDetail di sini karena sudah dipindahkan ke schemas
+   // import { Comment } from "../schemas/comment";
+
+   // type CommentDetail = Comment & {
+   //   postId: number;
+   //   name: string;
+   // };
+
+   // TODO: RTK Query - Fetch Comments By Id (6)
+   // Import Hooks yang dibutuhkan (useGetCommentByIdQuery)
+   import { useGetCommentByIdQuery } from "../services/jsonplaceholder";
+
+   const CommentDetailPage = () => {
+     const { id } = useParams();
+
+     // TODO: RTK Query - Fetch Comments By Id (7)
+     // Comment state dan useEffect yang ada di sini, karena belum dibutuhkan lagi
+     // const [commentDetail, setCommentDetail] = useState<CommentDetail>();
+
+     // useEffect(() => {
+     //   (async () => {
+     //     try {
+     //       const response = await fetch(
+     //         `https://jsonplaceholder.typicode.com/comments/${id}`
+     //       );
+
+     //       if (!response.ok) {
+     //         throw new Error("Terjadi sebuah error !");
+     //       }
+
+     //       const responseJson: CommentDetail = await response.json();
+     //       setCommentDetail(responseJson);
+     //     } catch (err) {
+     //       if (err instanceof Error) {
+     //         console.log(err.message);
+     //       }
+     //     }
+     //   })();
+     // }, [id]);
+
+     // TODO: RTK Query - Fetch Comments By Id (8)
+     // Di sini kita akan coba menggunakan isLoading dan data dari Hooks
+     const { data: commentDetail, isLoading } = useGetCommentByIdQuery(
+       Number(id)
+     );
+
+     return (
+       <>
+         {/* // TODO: RTK Query - Fetch Comments By Id (9) */}
+         {/* Di sini kita akan mencoba untuk menggunakan isLoading bawaan dari Hooks */}
+         {isLoading && (
+           <>
+             <p>Loading ...</p>
+           </>
+         )}
+         {!isLoading && (
+           <>
+             <p>Id: {commentDetail?.id}</p>
+             <p>PostId: {commentDetail?.postId}</p>
+             <p>Name: {commentDetail?.name}</p>
+             <p>Email: {commentDetail?.email}</p>
+             <p>Body: {commentDetail?.body}</p>
+           </>
+         )}
+       </>
+     );
+   };
+
+   export default CommentDetailPage;
+   ```
+
+   **(Sambil di-copy-paste sambil dibaca yah comment-nya !)**
+
+Sampai pada titik ini seharusnya kita sudah berhasil untuk menggunakan `RTK Query` dengan sangat baik untuk Mengambil comment berdasarkan id.
+
+Perubahannya terlihat lebih simpel bukan?
+
+Hal ini terjadi karena kita sudah membuat Garis besar kodenya dengan cukup baik, sehingga modifikasi kodenya menjadi lebih sedikit.
+
+Jadi... Apakah sudah mau berpindah hati ke RTK Query ketimbang menuliskannya secara mandiri? 😊
