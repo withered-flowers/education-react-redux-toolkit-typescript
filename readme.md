@@ -12,6 +12,7 @@
 - [Let's Demo (RTK Query)](#lets-demo-rtk-query)
   - [Langkah 1 - Mulai RTK Query (Fetch All Comments)](#langkah-1---mulai-rtk-query-fetch-all-comments)
   - [Langkah 2 - Melanjutkan RTK Query (Fetch Comments by Id)](#langkah-2---melanjutkan-rtk-query-fetch-comments-by-id)
+  - [Langkah 3 - Menambahkan Mutation RTK Query (Post Todo)](#langkah-3---menambahkan-mutation-rtk-query-post-todo)
 
 ## Disclaimer & Prerequisites
 
@@ -1300,3 +1301,615 @@ Perubahannya terlihat lebih simpel bukan?
 Hal ini terjadi karena kita sudah membuat Garis besar kodenya dengan cukup baik, sehingga modifikasi kodenya menjadi lebih sedikit.
 
 Jadi... Apakah sudah mau berpindah hati ke RTK Query ketimbang menuliskannya secara mandiri? 😊
+
+Selanjutnya kita akan masuk pada materi terakhir (Ya, bener, ini terakhir kok !), yaitu untuk melakukan method Mutation.
+
+Mutation yang akan kita gunakan berupa `POST` yah !
+
+### Langkah 3 - Menambahkan Mutation RTK Query (Post Todo)
+
+Pada langkah ini, kita akan mencoba untuk menggunakan Mutation pada `RTK Query` yah.
+
+Di sini kita akan mengganti kode yang ada pada `FormPage.tsx` untuk bisa menggunakan method `POST` dari `https://reqres.in/api/users` dan akan mengembalikan hasil response kembaliannya tampilan webnya yah !
+
+Langkah-langkahnya adalah sebagai berikut:
+
+1. Sebelum kita masuk ke dalam langkah penulisan kodenya, mari kita membaca sedikit yah data apa saja yang dibutuhkan dan yang akan ditampilkan di web kita.
+
+   ```json
+   Request
+   {
+     "name": "morpheus",
+     "job": "leader"
+   }
+
+   Response
+   {
+     "name": "morpheus",
+     "job": "leader",
+     "id": "496",
+     "createdAt": "2023-03-20T07:21:49.612Z"
+   }
+   ```
+
+1. Setelah ini kita akan mencoba untuk menuliskan tipe data yang dibutuhkan untuk User yah, akan kita buat dengan nama `UserRequest` dan `UserResponse`.
+
+   - `UserRequest` adalah data yang dikirimkan ke API
+   - `UserResponse` adalah data kembalian dari API
+
+   Kita akan membuatnya di dalam sebuah schema yang baru dengan nama `user.ts`.
+
+   Buat sebuah file baru dengan nama `/src/schemas/user.ts`, kemudian tambahkan kode berikut yah:
+
+   ```ts
+   // TODO: RTK Query Post User - POST todo (1)
+   // Karena pada JSON yang terlihat lebih banyak kembalian Response daripada Request
+   // maka di sini kita menuliskan UserResponse terlebih dahulu
+   export type UserResponse = {
+     name: string;
+     job: string;
+     // Di sini kita menggunakan string karena kembaliannya berupa string yah
+     id: string;
+     createdAt: string;
+   };
+
+   // TODO: RTK Query Post User - POST todo (2)
+   // Karena Sebenarnya UserRequest ini sama persis dengan UserReponse
+   // Hanya saja tanpa id dan createdAt
+   // Kita bisa menggunakan Utils dari TypeScript dengan nama Omit
+
+   // Dokumentasi:
+   // - https://www.typescriptlang.org/docs/handbook/utility-types.html#omittype-keys
+   export type UserRequest = Omit<UserResponse, "id" | "createdAt">;
+
+   // Sehingga di di sini TypeScript akan membuatkan kepada kita UserRequest
+   // berdasarkan UserResponse namun tanpa "id" dan "createdAt"
+   ```
+
+1. Selanjutnya kita akan melakukan modifikasi terhadap page `FormPage.tsx` untuk bisa menerima input berupa `name` dan `job`.
+
+   Pada pembelajaran sebelumnya kita menggunakan uncontrolled components yah.Sedangkan pada pembelajaran ini kita menggunakan controllerd components, dalam artian bahwa component input-nya akan dikontrol oleh Reactnya.
+
+   Buka kembali file `/src/pages/FormPage.tsx` kemudian modifikasi filenya menjadi sebagai berikut:
+
+   (Lihat: `TODO: RTK Query - POST todo`)
+
+   ```tsx
+   // TODO: RTK Query - POST todo (3)
+   // Comment SELURUH code yang sebelumnya ada di sini
+   // import { FormEvent, useState } from "react";
+
+   // type FormState = {
+   //   isError: boolean;
+   //   isSuccess: boolean;
+   // };
+
+   // const FormPage = () => {
+   //   const [formState, setFormState] = useState<FormState>({
+   //     isError: false,
+   //     isSuccess: false,
+   //   });
+
+   //   const formOnSubmitHandler = (event: FormEvent<HTMLFormElement>) => {
+   //     event.preventDefault();
+   //     localStorage.clear();
+
+   //     const target = event.target as typeof event.target & {
+   //       username: { value: string };
+   //       password: { value: string };
+   //       reset: () => void;
+   //     };
+
+   //     const username = target.username.value;
+   //     const password = target.password.value;
+
+   //     if (username === "belajar" && password === "react-ts") {
+   //       setFormState({
+   //         isError: false,
+   //         isSuccess: true,
+   //       });
+
+   //       localStorage.setItem("login", btoa(username + password));
+   //     } else {
+   //       setFormState({
+   //         isSuccess: false,
+   //         isError: true,
+   //       });
+   //     }
+
+   //     target.reset();
+   //   };
+
+   //   return (
+   //     <>
+   //       <p>Ini adalah halaman Form</p>
+
+   //       <form
+   //         onSubmit={formOnSubmitHandler}
+   //         style={{
+   //           display: "flex",
+   //           flexDirection: "column",
+   //           gap: "1em",
+   //           width: "50vw",
+   //         }}
+   //       >
+   //         <input type="text" name="username" placeholder="Username" />
+   //         <input type="password" name="password" placeholder="Password" />
+   //         <button type="submit">Lakukan Login</button>
+   //       </form>
+
+   //       {formState.isSuccess && (
+   //         <p style={{ color: "#008744" }}>
+   //           Login Berhasil, silahkan cek Local Storage
+   //         </p>
+   //       )}
+
+   //       {formState.isError && <p style={{ color: "#D62D20" }}>Login Gagal</p>}
+   //     </>
+   //   );
+   // };
+
+   // export default FormPage;
+
+   // TODO: RTK Query - POST todo (4)
+   // Membuat halaman Form yang baru
+   import { ChangeEvent, FormEvent, useState } from "react";
+   import { type UserRequest } from "../schemas/user";
+
+   const FormPage = () => {
+     const [userRequest, setUserRequest] = useState<UserRequest>({
+       name: "",
+       job: "",
+     });
+
+     const formOnSubmitHandler = (event: FormEvent<HTMLFormElement>) => {
+       event.preventDefault();
+
+       console.log(userRequest);
+     };
+
+     const inputNameOnChangeHandler = (
+       event: ChangeEvent<HTMLInputElement>
+     ) => {
+       const name = event.currentTarget.value;
+       setUserRequest({
+         ...userRequest,
+         name,
+       });
+     };
+
+     const inputJobOnChangeHandler = (event: ChangeEvent<HTMLInputElement>) => {
+       const job = event.currentTarget.value;
+       setUserRequest({
+         ...userRequest,
+         job,
+       });
+     };
+
+     return (
+       <>
+         <p>Ini adalah halaman Form</p>
+
+         <form
+           onSubmit={formOnSubmitHandler}
+           style={{
+             display: "flex",
+             flexDirection: "column",
+             gap: "1em",
+             width: "50vw",
+           }}
+         >
+           <input
+             type="text"
+             name="name"
+             placeholder="Name"
+             onChange={inputNameOnChangeHandler}
+             value={userRequest.name}
+           />
+
+           <input
+             type="text"
+             name="job"
+             placeholder="Job"
+             onChange={inputJobOnChangeHandler}
+             value={userRequest.job}
+           />
+
+           <button type="submit">POST user</button>
+         </form>
+       </>
+     );
+   };
+
+   export default FormPage;
+   ```
+
+   **(Sambil di-copy-paste sambil dibaca yah comment-nya !)**
+
+1. Selanjutnya kita akan membuat sebuah services yang baru untuk bisa melakukan `POST` ke `https://reqres.in/api/users`.
+
+   Karena API yang kita gunakan adalah dari https://reqres.in, maka file yang akan kita buat adalah `reqresin.ts`
+
+   Buat sebuah file baru dengan nama `/src/services/reqresin.ts`, kemudian masukkan kode di bawah ini:
+
+   (Lihat: `TODO: RTK Query - POST todo`)
+
+   ```ts
+   // TODO: RTK Query - POST todo (5)
+   // Karena sekarang kita menggunakan POST dari reqres.in
+   // maka ada baiknya kita akan membuat sebuah service yang baru yah !
+   import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+   import { type UserRequest, type UserResponse } from "../schemas/user";
+
+   // Di sini kita akan mencoba untuk menuliskan API reqresin yang digunakan
+   export const reqresinAPI = createApi({
+     reducerPath: "reqresinAPI",
+     baseQuery: fetchBaseQuery({
+       baseUrl: "https://reqres.in/api/",
+     }),
+     endpoints: (builder) => ({
+       // Karena di sini kita akan melakukan post terhadap user
+       // maka kita akan menyebut endpoint kita adalah "createUser"
+
+       // Karena di sini kita menggunakan POST
+       // maka kita akan menggunakan builder.mutation
+
+       // builder.mutation merupakan sebuah fungsi yang menerima
+       // Generic yang sama dengan builder.query
+       // - TipeDataOutput (ResultType)
+       // - TipeDataInput (QueryArg)
+
+       // builder.mutation<TipeDataOutput, TipeDataInput>
+
+       // Dan sama dengan builder.query, parameter yang dimasukkan adalah sebuah Object
+
+       // FYI:
+       // (Untuk pengguna TypeScript tingkat lanjut)
+       // Sebenarnya kita di sini bisa menggunakan TypeScript Utils dengan nama
+       // "Pick" dan "Partial" untuk memasukkan TipeDataInput
+       createUser: builder.mutation<UserResponse, UserRequest>({
+         // Property yang dibutuhkan pun, sama dengan builder.query, yaitu "query"
+
+         // Property query pun sama dengan builder.query punya property query
+
+         // Sebuah fungsi yang menerima input dan mengembalikan sebuah Object
+         query: (requestBody) => ({
+           // Perbedaannya ada di sini
+           // Pada builder.query, kita mungkin hanya menggunakan property yang bernama
+           // "url", saja.
+
+           // Namun pada mutation, selain "url", harus ada "method", dan "body" (bila diperlukan)
+           // Pada saat kita melakukan POST ke https://reqres.in/api/users dengan data JSON
+           // misalnya seperti ini:
+           // { "name": "blablabla", "job": "bliblibli" }
+
+           // Maka urlnya adalah "users", method adalah "POST", dan body adalah JSON requestnya
+           url: "users",
+           method: "POST",
+           body: requestBody,
+         }),
+
+         // FYI:
+         // Di sini juga sebenarnya kita bisa menggunakan property tambahan lainnya seperti
+         // - transformResponse
+         // - transformErrorResponse
+       }),
+     }),
+   });
+
+   // Di sini kita akan export Hooks yang didefine
+   // ----
+   // Nama Endpoints: createUser
+   // Tipe builder: mutation
+   // Nama Hooks yang digenerate => useCreateUserMutation
+   // ----
+   export const { useCreateUserMutation } = reqresinAPI;
+   ```
+
+   **(Sambil di-copy-paste sambil dibaca yah comment-nya !)**
+
+1. Selanjutnya kita akan memodifikasi file `store.ts` untuk bisa menggunakan service yang sudah kita buat di atas. Buka kembali file `/src/app/store.ts`, lalu masukkan kode berikut:
+
+   (Lihat: `TODO: RTK Query - POST todo`)
+
+   ```ts
+   // Pada file ini kita akan membuat store yang dibutuhkan
+   // Anggap saja store ini adalah file utama untuk State Management yang kita miliki
+
+   // Ingat bahwa pada app/store.ts ini hanya berisi fungsi fungsi yang kita butuhkan
+   // untuk menggunakan RTK, sehingga di sini selalu HANYALAH fungsi saja
+   // ekstensi filenya adalah .ts, bukan .tsx !
+
+   // Di sini kita harus menggunakan fungsi bawaan dari RTK yang bernama configureStore
+
+   // INGAT (untuk pengguna Redux yang lama):
+   // - Kita tidak menggunakan createStore / legacy_createStore lagi yah di sini !
+   import { configureStore } from "@reduxjs/toolkit";
+
+   // Yang diexport secara default dari counterSlice adalah counterSlice.reducers
+   // Sehingga di sini lebih cocok disebut dengan counterReducer
+   import counterReducer from "../features/counterSlice";
+
+   // TODO: RTK Query - Comot Semua Comments (1)
+   // Import service yang sudah dibuat
+   import { jsonPlaceholderAPI } from "../services/jsonplaceholder";
+
+   // TODO: RTK Query - POST todo (6)
+   // Import service yang sudah dibuat
+   import { reqresinAPI } from "../services/reqresin";
+
+   // Di sini kita akan membuat storenya
+   // configureStore ini akan menerima sebuah Object
+   export const store = configureStore({
+     // props paling dibutuhkan di dalam store, apabila kita menggunakan RTK
+     // adalah "reducer"
+
+     // "reducer" ini menerima Object yang isinya adalah:
+     //   ---- bebas ----
+     //   nah loh, mengapa bebas?
+     //   Karena isinya adalah:
+     //   - props nya adalah alias dari reducer yang akan digunakan
+     //   - valuenya adalah nama dari reducer yang akan digunakan
+     reducer: {
+       counter: counterReducer,
+
+       // TODO: RTK Query - Comot Semua Comments (2)
+       // Masukkan reducer dari services yang sudah dibuat disini
+
+       // Dari mana tuh reducernya ada?
+       // OTOMATIS dibuatkan pada saat membuat service (creatApi)
+       // kita hanya perlu definisikan saja !
+
+       // Ingat di sini perlu menggunakan []
+
+       // Semuanya OTOMATIS !
+       [jsonPlaceholderAPI.reducerPath]: jsonPlaceholderAPI.reducer,
+
+       // TODO: RTK Query - POST todo (7)
+       // Masukkan reducer dari services yang sudah dibuat di sini
+       [reqresinAPI.reducerPath]: reqresinAPI.reducer,
+     },
+
+     // TODO: RTK Query - Comot semua Comments (3)
+     // Karena RTK Query ini sebenarnya di balik layar menggunakan Thunk
+     // Kita harus menyelipkan middlewarenya di sini
+
+     // Tapi.....
+
+     // Lagi lagi karena kita menggunakan RTK Query
+
+     // Middleware (dan Redux Thunk) nya sudah dibuatkan (dan diselipkan) !
+     // Jadi kita tinggal sisipkan saja !
+     middleware: (getDefaultMiddleware) =>
+       getDefaultMiddleware()
+         .concat(jsonPlaceholderAPI.middleware)
+         // TODO: RTK Query - POST todo (8)
+         // Concat middleware reqresin di sini
+         .concat(reqresinAPI.middleware),
+   });
+
+   // Untuk memudahkan kita dalam menggunakan TypeScriptnya nanti,
+   // Ada beberapa variabel khusus TypeScript yang harus digunakan
+
+   // https://redux-toolkit.js.org/tutorials/typescript#define-root-state-and-dispatch-types
+
+   // Bagi yang malas baca:
+   //    Kedua variabel di bawah ini akan digunakan untuk membuat Custom Hooks yang akan
+   //    kita gunakan agar TypeScript mengerti tipe data yang digunakan untuk masing masing
+   //    Reducer function yang dipilih (action dispatcher) dan
+   //    tipe data dari State yang bisa dipilih (state selector)
+
+   // Ingat bahwa dengan menggunakan TypeScript kita SANGAT MENGINGINKAN pengetahuan
+   // tentang tipe data serta props apa saja yang dibutuhkan untuk sebuah variabel / fungsi,
+   // TIDAK HANYA SEKEDAR any saja !
+
+   // Yaitu State global (kita sebut dengan RootState)
+   export type RootState = ReturnType<typeof store.getState>;
+
+   // Dan Dispatch yang bisa membaca seluruh dispatch yang ada (kita sebut AppDispatch)
+   export type AppDispatch = typeof store.dispatch;
+   ```
+
+   **(Sambil di-copy-paste sambil dibaca yah comment-nya !)**
+
+1. Selanjutnya kita akan memodifikasi kembali file `FormPage.tsx` untuk menggunakan mutation yang sudah dibuat. Buka kembali file `/src/pages/FormPage.tsx` kemudian modifikasi filenya menjadi seperti berikut:
+
+   (Lihat: `TODO: RTK Query - POST todo (9) ... (12)`)
+
+   ```tsx
+   // TODO: RTK Query - POST todo (3)
+   // Comment SELURUH code yang sebelumnya ada di sini
+   // import { FormEvent, useState } from "react";
+
+   // type FormState = {
+   //   isError: boolean;
+   //   isSuccess: boolean;
+   // };
+
+   // const FormPage = () => {
+   //   const [formState, setFormState] = useState<FormState>({
+   //     isError: false,
+   //     isSuccess: false,
+   //   });
+
+   //   const formOnSubmitHandler = (event: FormEvent<HTMLFormElement>) => {
+   //     event.preventDefault();
+   //     localStorage.clear();
+
+   //     const target = event.target as typeof event.target & {
+   //       username: { value: string };
+   //       password: { value: string };
+   //       reset: () => void;
+   //     };
+
+   //     const username = target.username.value;
+   //     const password = target.password.value;
+
+   //     if (username === "belajar" && password === "react-ts") {
+   //       setFormState({
+   //         isError: false,
+   //         isSuccess: true,
+   //       });
+
+   //       localStorage.setItem("login", btoa(username + password));
+   //     } else {
+   //       setFormState({
+   //         isSuccess: false,
+   //         isError: true,
+   //       });
+   //     }
+
+   //     target.reset();
+   //   };
+
+   //   return (
+   //     <>
+   //       <p>Ini adalah halaman Form</p>
+
+   //       <form
+   //         onSubmit={formOnSubmitHandler}
+   //         style={{
+   //           display: "flex",
+   //           flexDirection: "column",
+   //           gap: "1em",
+   //           width: "50vw",
+   //         }}
+   //       >
+   //         <input type="text" name="username" placeholder="Username" />
+   //         <input type="password" name="password" placeholder="Password" />
+   //         <button type="submit">Lakukan Login</button>
+   //       </form>
+
+   //       {formState.isSuccess && (
+   //         <p style={{ color: "#008744" }}>
+   //           Login Berhasil, silahkan cek Local Storage
+   //         </p>
+   //       )}
+
+   //       {formState.isError && <p style={{ color: "#D62D20" }}>Login Gagal</p>}
+   //     </>
+   //   );
+   // };
+
+   // export default FormPage;
+
+   // TODO: RTK Query - POST todo (4)
+   // Membuat halaman Form yang baru
+   import { ChangeEvent, FormEvent, useState } from "react";
+   import { type UserRequest } from "../schemas/user";
+
+   // TODO: RTK Query - POST todo (9)
+   // Import Hooks yang digunakan untuk mutation
+   import { useCreateUserMutation } from "../services/reqresin";
+
+   const FormPage = () => {
+     const [userRequest, setUserRequest] = useState<UserRequest>({
+       name: "",
+       job: "",
+     });
+
+     // TODO: RTK Query - POST todo (10)
+     // Menggunakan hooks pada component
+
+     // Query dan Mutation return hooksnya CUKUP BERBEDA
+     // Query = returnya sebuah value dalam bentuk Object
+     // Mutation returnnya sebuah ARRAY (tuple):
+     //    [0]: Merupakan sebuah fungsi untuk menjalankan mutation (dispatcher)
+     //         tipe datanya adalah UseMutationTrigger
+
+     //    [1]: Merupakan Object yang isinya MIRIP dengan Query hooks
+     //         tipe datanya adalah UseMutationResult | SelectedUseMutationResult
+
+     // Ceritanya di sini karena Objectnya mirip dengan Query hooks
+     // Maka kita akan langsung destructuring untuk mengambil isError dan data yang dikembalikan
+     const [dispatcher, { isError, data }] = useCreateUserMutation();
+
+     const formOnSubmitHandler = (event: FormEvent<HTMLFormElement>) => {
+       event.preventDefault();
+
+       console.log(userRequest);
+
+       // TODO: RTK Query - POST todo (11)
+       // Dispatch si mutasi di sini
+       // Karena menerima input (UserRequest)
+
+       // Maka inputnya kita berikan lewat dispatchernya
+       dispatcher(userRequest);
+     };
+
+     const inputNameOnChangeHandler = (
+       event: ChangeEvent<HTMLInputElement>
+     ) => {
+       const name = event.currentTarget.value;
+       setUserRequest({
+         ...userRequest,
+         name,
+       });
+     };
+
+     const inputJobOnChangeHandler = (event: ChangeEvent<HTMLInputElement>) => {
+       const job = event.currentTarget.value;
+       setUserRequest({
+         ...userRequest,
+         job,
+       });
+     };
+
+     return (
+       <>
+         <p>Ini adalah halaman Form</p>
+
+         <form
+           onSubmit={formOnSubmitHandler}
+           style={{
+             display: "flex",
+             flexDirection: "column",
+             gap: "1em",
+             width: "50vw",
+           }}
+         >
+           <input
+             type="text"
+             name="name"
+             placeholder="Name"
+             onChange={inputNameOnChangeHandler}
+             value={userRequest.name}
+           />
+
+           <input
+             type="text"
+             name="job"
+             placeholder="Job"
+             onChange={inputJobOnChangeHandler}
+             value={userRequest.job}
+           />
+
+           <button type="submit">POST user</button>
+         </form>
+
+         {/* // TODO: RTK Query - POST todo (12) */}
+         {/* Conditional rendering result di sini */}
+         {!isError && data && (
+           <>
+             <p>Hasil kembalian dari API adalah:</p>
+             <p>{JSON.stringify(data)}</p>
+           </>
+         )}
+       </>
+     );
+   };
+
+   export default FormPage;
+   ```
+
+   **(Sambil di-copy-paste sambil dibaca yah comment-nya !)**
+
+Sampai pada langkah ini, artinya kita sudah berhasil menggunakan RTK Query untuk melakukan `POST /users` dari `https://reqres.in/api` yah !
+
+Selamat, sampai pada titik ini artinya kita sudah mempelajari cara pakai `RTK` dan `RTK Query` **yang sederhana** dengan baik.
+
+Selanjutnya sebenarnya masih ada cara penggunaan `RTK Query` untuk bisa melakukan automatic re-fetch (data bisa fetch ulang) ataupun menggunakan `cache` dengan baik.
+
+Tapi itu untuk dipelajari secara mandiri yah.
+
+Semoga materi ini bisa membantu teman-teman 🥰

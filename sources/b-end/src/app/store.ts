@@ -19,6 +19,10 @@ import counterReducer from "../features/counterSlice";
 // Import service yang sudah dibuat
 import { jsonPlaceholderAPI } from "../services/jsonplaceholder";
 
+// TODO: RTK Query - POST todo (6)
+// Import service yang sudah dibuat
+import { reqresinAPI } from "../services/reqresin";
+
 // Di sini kita akan membuat storenya
 // configureStore ini akan menerima sebuah Object
 export const store = configureStore({
@@ -45,6 +49,10 @@ export const store = configureStore({
 
     // Semuanya OTOMATIS !
     [jsonPlaceholderAPI.reducerPath]: jsonPlaceholderAPI.reducer,
+
+    // TODO: RTK Query - POST todo (7)
+    // Masukkan reducer dari services yang sudah dibuat di sini
+    [reqresinAPI.reducerPath]: reqresinAPI.reducer,
   },
 
   // TODO: RTK Query - Comot semua Comments (3)
@@ -58,7 +66,11 @@ export const store = configureStore({
   // Middleware (dan Redux Thunk) nya sudah dibuatkan (dan diselipkan) !
   // Jadi kita tinggal sisipkan saja !
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(jsonPlaceholderAPI.middleware),
+    getDefaultMiddleware()
+      .concat(jsonPlaceholderAPI.middleware)
+      // TODO: RTK Query - POST todo (8)
+      // Concat middleware reqresin di sini
+      .concat(reqresinAPI.middleware),
 });
 
 // Untuk memudahkan kita dalam menggunakan TypeScriptnya nanti,
