@@ -15,6 +15,10 @@ import { configureStore } from "@reduxjs/toolkit";
 // Sehingga di sini lebih cocok disebut dengan counterReducer
 import counterReducer from "../features/counterSlice";
 
+// TODO: RTK Query - Comot Semua Comments (1)
+// Import service yang sudah dibuat
+import { jsonPlaceholderAPI } from "../services/jsonplaceholder";
+
 // Di sini kita akan membuat storenya
 // configureStore ini akan menerima sebuah Object
 export const store = configureStore({
@@ -29,7 +33,32 @@ export const store = configureStore({
   //   - valuenya adalah nama dari reducer yang akan digunakan
   reducer: {
     counter: counterReducer,
+
+    // TODO: RTK Query - Comot Semua Comments (2)
+    // Masukkan reducer dari services yang sudah dibuat disini
+
+    // Dari mana tuh reducernya ada?
+    // OTOMATIS dibuatkan pada saat membuat service (creatApi)
+    // kita hanya perlu definisikan saja !
+
+    // Ingat di sini perlu menggunakan []
+
+    // Semuanya OTOMATIS !
+    [jsonPlaceholderAPI.reducerPath]: jsonPlaceholderAPI.reducer,
   },
+
+  // TODO: RTK Query - Comot semua Comments (3)
+  // Karena RTK Query ini sebenarnya di balik layar menggunakan Thunk
+  // Kita harus menyelipkan middlewarenya di sini
+
+  // Tapi.....
+
+  // Lagi lagi karena kita menggunakan RTK Query
+
+  // Middleware (dan Redux Thunk) nya sudah dibuatkan (dan diselipkan) !
+  // Jadi kita tinggal sisipkan saja !
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(jsonPlaceholderAPI.middleware),
 });
 
 // Untuk memudahkan kita dalam menggunakan TypeScriptnya nanti,

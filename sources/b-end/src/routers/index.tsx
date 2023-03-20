@@ -1,6 +1,8 @@
 import { createBrowserRouter, redirect } from "react-router-dom";
 
-import { type Comment } from "../schemas/comment";
+// TODO: RTK Query - Comot semua Comments (4)
+// Comment type ini karena tidak digunakan lagi di sini
+// import { type Comment } from "../schemas/comment";
 
 import BaseLayout from "../layouts/BaseLayout";
 import FormPage from "../pages/FormPage";
@@ -28,28 +30,30 @@ const router = createBrowserRouter([
       {
         path: "table",
         element: <TablePage />,
-        loader: async ({ request }: { request: Request }) => {
-          console.log(request);
+        // TODO: RTK Query - Comot semua Comments (3)
+        // Karena kita tidak menggunakan loader lagi, maka fungsi ini kita comment
+        // loader: async ({ request }: { request: Request }) => {
+        //   console.log(request);
 
-          try {
-            const response = await fetch(
-              "https://jsonplaceholder.typicode.com/comments"
-            );
+        //   try {
+        //     const response = await fetch(
+        //       "https://jsonplaceholder.typicode.com/comments"
+        //     );
 
-            if (!response.ok) {
-              const body = await response.text();
-              throw new Error(body);
-            }
+        //     if (!response.ok) {
+        //       const body = await response.text();
+        //       throw new Error(body);
+        //     }
 
-            const responseJson: Comment[] = await response.json();
+        //     const responseJson: Comment[] = await response.json();
 
-            return responseJson;
-          } catch (err) {
-            if (typeof err === "string") {
-              console.log(err);
-            }
-          }
-        },
+        //     return responseJson;
+        //   } catch (err) {
+        //     if (typeof err === "string") {
+        //       console.log(err);
+        //     }
+        //   }
+        // },
 
         children: [
           {
