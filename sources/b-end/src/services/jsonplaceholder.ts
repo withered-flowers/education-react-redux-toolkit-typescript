@@ -10,7 +10,9 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 // Karena type Comment kita ada di luar file ini, jadinya kita harus import juga
-import type { Comment } from "../schemas/comment";
+// TODO: RTK Query - Fetch Comments By Id (2)
+// Karena di sini kita menggunakan CommentDetail, jangan lupa diimport
+import type { Comment, CommentDetail } from "../schemas/comment";
 
 // ----- HATI HATI BANYAK MAGIC YANG DIBUAT DI DALAM SINI ! -----
 // ----- BACA PERLAHAN-LAHAN UNTUK BISA MENGERTI MAKSUDNYA ! -----
@@ -99,6 +101,43 @@ export const jsonPlaceholderAPI = createApi({
       // RTK Query sudah menyediakan juga yang dinamakan dengan transformResponse
       // https://redux-toolkit.js.org/rtk-query/usage/customizing-queries#customizing-query-responses-with-transformresponse
     }),
+
+    // TODO: RTK Query - Fetch Comments By Id (3)
+    // Sekarang di sini kita akan menambahkan sebuah Endpoint yang baru
+
+    // karena ini akan mengambil comment berdasarkan id, sebut saja namanya adalah
+    // "getCommentById"
+
+    // Karena getCommentById ini harapannya akan mengembalikan sebuah CommentDetail,
+    // dan membutuhkan parameter berupa id dari CommentDetail yang akan diambil
+    // Maka cara membuat builder.query nya sekarang berbeda dengan yang ada di atas
+
+    // Akan kita buat Genericnya menjadi <CommentDetail, number>
+
+    // Maksudnya adalah:
+    // - TipeDataOutput dari fetch-er ini adalah CommentDetail
+    // - TipeDataInput dari fetch-er ini adalah number
+
+    // FYI:
+    // Input di sini HANYA boleh menerima satu saja variabelnya <TipeDataInput>
+    // Apabila input-nya lebih dari satu, WAJIB dibuatkan Type-nya terlebih dahulu
+    // Sehingga nanti akan berupa suatu Object yang bisa menerima banyak property
+    getCommentById: builder.query<CommentDetail, number>({
+      // Pada saat kita menembak ke https://jsonplaceholder.typicode.com/comments/{id}
+      // Kita membutuhkan input berupa id
+
+      // Seharusnya TypeScript tidak mengerti bahwa id yang dimaksud adalah suatu number
+      // Namun, karena pada builder.query kita sudah mendefinisikan Generic Type untuk
+      // Inputnya <TipeDataOutput, TipeDataInput> nya adalah suatu number
+
+      // Sehingga di sini, apabila id-nya kita hover, TypeScript akan mengetahui
+      // bahwa id ini akan memiliki tipe data "number"
+
+      // Menarik bukan?
+      query: (id) => ({
+        url: `comments/${id}`,
+      }),
+    }),
   }),
 });
 
@@ -125,4 +164,10 @@ export const jsonPlaceholderAPI = createApi({
 
 // Karena di dalam endpoints nama nya adalah getComments dan dibuat dengan builder.query
 // maka yang diexport hooks nya adalah useGetCommentsQuery
-export const { useGetCommentsQuery } = jsonPlaceholderAPI;
+export const {
+  useGetCommentsQuery,
+  // TODO: RTK Query - Fetch Comments By Id (4)
+  // Di sini kita akan menambahkan Hooks untuk getCommentById
+  // yaitu useGetCommentByIdQuery
+  useGetCommentByIdQuery,
+} = jsonPlaceholderAPI;
