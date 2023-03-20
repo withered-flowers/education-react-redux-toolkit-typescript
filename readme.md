@@ -516,7 +516,7 @@ const Component = () => {
          // Anggap ini useAppDispatch
          dispatcher(setDataDariExternal(responseJson));
       })()
-   });
+   }, []);
 }
 ```
 
