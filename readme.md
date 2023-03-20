@@ -10,6 +10,7 @@
   - [Langkah 1 - Inisialisasi Project](#langkah-1---inisialisasi-project)
   - [Langkah 2 - Mulai RTK (duoCounter)](#langkah-2---mulai-rtk-duocounter)
 - [Let's Demo (RTK Query)](#lets-demo-rtk-query)
+  - [Langkah 1 - Mulai RTK Query (Fetch All Comments)](#langkah-1---mulai-rtk-query-fetch-all-comments)
 
 ## Disclaimer & Prerequisites
 
@@ -532,4 +533,470 @@ Untuk itu tim RTK sendiri memperkenalkan sesuatu untuk menyelesaikan permasalaha
 
 ## Redux Toolkit Query
 
+`Redux Toolkit Query`, selanjutnya disebut `RTK Query`, bila kita kutip dari web [RTK Official](https://redux-toolkit.js.org/tutorials/rtk-query), adalah suatu tool yang disediakan oleh tim RTK untuk mencomot data dan cache (`data fetching and caching tool`). `RTK Query` ini dibuat di atas RTK dan sudah include di dalam package @reduxjs/toolkit`, sehingga tidak perlu menambah package lagi !
+
+FYI untuk tim Redux: `Redux Thunk` sudah include di dalam `@reduxks/toolkit`, jadi tidak perlu menggunakan package tambahan lagi! Asyique kan?
+
+FYI untuk tim axios: Tidak perlu menggunakan axios ataupun logic data fetching lainnya, karena sudah `include` di dalam `@reduxjs/toolkit` ini, hanya perlu mendefinisikan endpoint dan data yang dibutuhkan / data yang akan dicomot saja !
+
 ## Let's Demo (RTK Query)
+
+Disclaimer:
+
+- Pada pembelajaran ini kita tidak akan menggunakan loader dari data api `React Router` yang akan digabungkan dengan `RTK Query` yah, karena ini pembelajaran yang cukup lanjut.
+- Fokus pembelajaran `RTK Query` ini adalah penggunaan `RTK Query` sederhananya saja !
+
+Yuk tanpa berlama-lama lagi, mari kita mencoba untuk menggunakan RTK Query yah.
+
+### Langkah 1 - Mulai RTK Query (Fetch All Comments)
+
+Pada langkah ini kita akan memodifikasi kode yang digunakan untuk fetch all comments yang ada pada `src/routers/index.tsx` dan `src/pages/TablePage.tsx`
+
+Langkah langkah untuk menggunakan fetch all comments-nya adalah sebagai berikut:
+
+Dokumentasi:
+
+- https://redux-toolkit.js.org/tutorials/rtk-query
+
+1. Sekarang kita akan membuat reducer, action, dan statenya terlebih dahulu yah. Nah untuk membuat ketiga hal ini, ketika kita menggunakan `RTK Query`,
+
+   > HAL INI TIDAK PERLU DILAKUKAN !
+
+   Loh kenapa demikian? Karena ini semuanya akan dibuat secara otomatis oleh RTK Query ketika menggunakan sebuah fungsi yang bernama `createApi`.
+
+   Karena `RTK Query` ini berfokus pada fetching data, yang umumnya dari eksternal, dan menggunakan `fetch / axios` pada umumnya, maka pada `RTK Query` ini pun demikian, kita menuliskannya pada tempat yang berbeda dengan `feature`
+
+   Umumnya ketika menggunakan `RTK Query`, kita mendefinisikannya pada sebuah folder bernama `services`
+
+   Dan karena kita menggunakan API dari **jsonplaceholder**, maka kita menggunakan nama filenya adalah: `services/jsonplaceholder.ts`
+
+1. Buat sebuah file dengan nama `/src/services/jsonplaceholder.ts`, kemudian tuliskan kode berikut:
+
+   ```ts
+   // Ingat bahwa services ini sifatnya juga akan membuat reducer function
+   // sehingga ekstensinya adalah .ts bukan .tsx yah !
+
+   // Import method yang dibutuhkan untuk membuat service
+   // Service di sini adalah suatu kumpulan fungsi yang digunakan untuk menembak suatu API
+
+   // Ada kemungkinan fungsi ini tidak bisa ditemukan secara langsung
+   // Karena ada banyak slash di dalamnya
+   // Sehingga harus ditulis manual
+   import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+
+   // Karena type Comment kita ada di luar file ini, jadinya kita harus import juga
+   import type { Comment } from "../schemas/comment";
+
+   // ----- HATI HATI BANYAK MAGIC YANG DIBUAT DI DALAM SINI ! -----
+   // ----- BACA PERLAHAN-LAHAN UNTUK BISA MENGERTI MAKSUDNYA ! -----
+
+   // Sekarang di sini kita akan mendefinisikan service yang dibutuhkan dengan menggunakan
+   // Suatu base URL dan endpoint yang harus ditembak
+
+   // Di sini kita akan menggunakan createApi
+
+   // Ini adalah fungsi bawaan dari RTK Query yang akan membuatkan kita
+   // Reducer, Action, dan State yang dibutuhkan untuk mencomot data dari API tertentu
+   // SECARA OTOMATIS !
+
+   // Sehingga walaupun di dalam sini akan ada reducer, action, dan state yang seharusnya kita buat
+   // namun kita tidak perlu memikirkan hal ini, karena sudah di-abstraksi-kan oleh createApi ini
+   export const jsonPlaceholderAPI = createApi({
+     // Di dalam Object ini ada beberapa props yang harus disediakan:
+     // - reducerPath, ini merupakan key yang akan dituliskan dan bersifat HARUS UNIQUE
+     //      (anggap saja ini adalah nama alias untuk dimasukkan ke dalam store)
+     reducerPath: "jsonPlaceholderAPI",
+
+     // - baseQuery: ini adalah fungsi untuk mendefinisikan baseURL dari endpoint yang akan dibuat
+     //      di sini kita akan menggunakan fetchBaseQuery
+
+     // Fungsi fetchBaseQuery ini akan menerima sebuah Object
+     //      yang harus memiliki baseUrl yang didefinisikan
+     baseQuery: fetchBaseQuery({
+       // Biasakan untuk baseUrl ini menuliskan `/` di belakangnya
+       baseUrl: "https://jsonplaceholder.typicode.com/",
+     }),
+
+     // - endpoints: ini merupakan endpoint mana saja berdasarkan baseUrl ini data akan dicomot
+     //      endpoints ini akan berupa suatu fungsi yang akan membuat actionCreator dan reducer nya
+     //      SECARA OTOMATIS !
+
+     //   endpoints ini berupa sebuah fungsi yang akan menerima parameter "builder"
+     //      builder ini juga merupakan sebuah Object yang memiliki props "query" dan "mutation"
+
+     //      builder.query (Function): mirip dengan method GET
+     //      builder.mutation (Function): mirip dengan method sisanya (POST PUT PATCH DELETE)
+     endpoints: (builder) => ({
+       // Di sini kita bisa mendefinisikan fungsi apa yang kita butuhkan untuk melakukan fetch data
+
+       // Karena di sini kita akan melakukan fetching comments seluruhnya, maka di sini kita akan
+       // memberikan nama fungsinya adalah getComments
+
+       // Di sini karena kita akan melakukan method GET, maka kita mengetahui bahwa kita akan
+       // membuat suatu query, oleh karena itu kita akan menggunakan builder.query
+
+       // Supaya TypeScript mengetahui kembalian datanya seperti apa,
+       // maka kita akan mendefinisikannya
+       // di dalam Generic <TipeDataKembalian, TipeDataInputan>
+
+       // Karena getComments ini akan mengembalikan Array of Type Comment
+       // dan tidak menerima input apapun
+
+       // Maka di sini kita akan menuliskannya sebagai builder.query<Comment[], void>
+       getComments: builder.query<Comment[], void>({
+         // builder.query merupakan suatu fungsi yang akan menerima suatu Object
+         // di dalam Object ini kita membutuhkan sebuah props: "query"
+         //    "query": sebuah fungsi yang membutuhkan suatu parameter berupa
+         //             input-an dari query yang akan ditembak
+
+         //             Fungsi ini akan mengembalikan sebuah Object
+         //             yang membutuhkan property suatu "url"
+
+         //             Atau bisa mengembalikan langsung string saja
+         //             () => Object | string
+
+         // Pada saat kita menembak ke https://jsonplaceholder.typicode.com/comments
+         // kita tidak membutuhkan input, sehingga pada fungsi query di bawah
+         // parameternya adalah kosong
+         query: () => ({
+           url: "comments",
+         }),
+         // Bisa juga dituliskan dengan shorthand langsung url sebagai berikut
+         // query: () => "comments"
+
+         // Gunakan cara Object bila ingin melakukan transformResponse / transformErrorResponse
+         // Gunakan cara shorthand bila ingin semua diotomasi oleh RTK Query
+
+         // FYI:
+         // Untuk yang membutuhkan response yang diubah
+         // Misalnya: kembalian JSONnya tidak tepat dan butuh diubah supaya tepat
+
+         // RTK Query sudah menyediakan juga yang dinamakan dengan transformResponse
+         // https://redux-toolkit.js.org/rtk-query/usage/customizing-queries#customizing-query-responses-with-transformresponse
+       }),
+     }),
+   });
+
+   // Nah pertanyaannya sekarang adalah, kalau sebanyak ini yang diotomasi:
+   // Q: Bagaimana cara kita menggunakannya di dalam Component yang akan kita buat nanti?
+   // A: Dengan menggunakan Hooks !
+
+   // Lalu pertanyaan selanjutnya adalah:
+   // Q: Hooks nya dapat dari mana? Bikin sendiri?
+   // A: OTOMATIS ! dari RTK Query !
+
+   // Sekarang kita perlu untuk meng-export Hooks yang otomatis ini supaya bisa digunakan di dalam
+   // Component yang digunakan
+
+   // Caranya adalah dengan....
+   // Cukup export saja !
+
+   // Jadi sebenarnya pada saat kita membuat service dengan menggunakan createApi
+   // Untuk setiap endpoints yang dibuat, akan secara OTOMATIS dibuatkan Hooks-nya
+
+   // Penamaan hooksnya adalah sebagai berikut:
+   // use<NamaFunctionDiDalamEndpoints>Query bila menggunakan builder.query
+   // use<NamaFunctionDiDalamEndpoints>Mutation bila menggunakan builder.mutation
+
+   // Karena di dalam endpoints nama nya adalah getComments dan dibuat dengan builder.query
+   // maka yang diexport hooks nya adalah useGetCommentsQuery
+   export const { useGetCommentsQuery } = jsonPlaceholderAPI;
+   ```
+
+   **(Sambil di-copy-paste sambil dibaca yah comment-nya !)**
+
+1. Selanjutnya kita harus menambahkan "reducer" yang sudah dibuat itu ke dalam file `store.ts`. Padahal dari tadi kita tidak membuat reducer sama sekali yah?
+
+   Karena pada saat membuat _data fetching_ dengan `RTK Query`, kita mendapatkan `state, reducer, dan action` nya secara OTOMATIS.
+
+   Oleh sebab itu, kita hanya perlu menambahkannya ke dalam `store.ts` saja.
+
+   Kode yang harus dimodifikasi pada `/src/app/store.ts` adalah sebagai berikut:
+
+   (Lihat: `TODO: RTK Query - Comot Semua Comments`)
+
+   ```ts
+   // Pada file ini kita akan membuat store yang dibutuhkan
+   // Anggap saja store ini adalah file utama untuk State Management yang kita miliki
+
+   // Ingat bahwa pada app/store.ts ini hanya berisi fungsi fungsi yang kita butuhkan
+   // untuk menggunakan RTK, sehingga di sini selalu HANYALAH fungsi saja
+   // ekstensi filenya adalah .ts, bukan .tsx !
+
+   // Di sini kita harus menggunakan fungsi bawaan dari RTK yang bernama configureStore
+
+   // INGAT (untuk pengguna Redux yang lama):
+   // - Kita tidak menggunakan createStore / legacy_createStore lagi yah di sini !
+   import { configureStore } from "@reduxjs/toolkit";
+
+   // Yang diexport secara default dari counterSlice adalah counterSlice.reducers
+   // Sehingga di sini lebih cocok disebut dengan counterReducer
+   import counterReducer from "../features/counterSlice";
+
+   // TODO: RTK Query - Comot Semua Comments (1)
+   // Import service yang sudah dibuat
+   import { jsonPlaceholderAPI } from "../services/jsonplaceholder";
+
+   // Di sini kita akan membuat storenya
+   // configureStore ini akan menerima sebuah Object
+   export const store = configureStore({
+     // props paling dibutuhkan di dalam store, apabila kita menggunakan RTK
+     // adalah "reducer"
+
+     // "reducer" ini menerima Object yang isinya adalah:
+     //   ---- bebas ----
+     //   nah loh, mengapa bebas?
+     //   Karena isinya adalah:
+     //   - props nya adalah alias dari reducer yang akan digunakan
+     //   - valuenya adalah nama dari reducer yang akan digunakan
+     reducer: {
+       counter: counterReducer,
+
+       // TODO: RTK Query - Comot Semua Comments (2)
+       // Masukkan reducer dari services yang sudah dibuat disini
+
+       // Dari mana tuh reducernya ada?
+       // OTOMATIS dibuatkan pada saat membuat service (creatApi)
+       // kita hanya perlu definisikan saja !
+
+       // Ingat di sini perlu menggunakan []
+
+       // Semuanya OTOMATIS !
+       [jsonPlaceholderAPI.reducerPath]: jsonPlaceholderAPI.reducer,
+     },
+
+     // TODO: RTK Query - Comot semua Comments (3)
+     // Karena RTK Query ini sebenarnya di balik layar menggunakan Thunk
+     // Kita harus menyelipkan middlewarenya di sini
+
+     // Tapi.....
+
+     // Lagi lagi karena kita menggunakan RTK Query
+
+     // Middleware (dan Redux Thunk) nya sudah dibuatkan (dan diselipkan) !
+     // Jadi kita tinggal sisipkan saja !
+     middleware: (getDefaultMiddleware) =>
+       getDefaultMiddleware().concat(jsonPlaceholderAPI.middleware),
+   });
+
+   // Untuk memudahkan kita dalam menggunakan TypeScriptnya nanti,
+   // Ada beberapa variabel khusus TypeScript yang harus digunakan
+
+   // https://redux-toolkit.js.org/tutorials/typescript#define-root-state-and-dispatch-types
+
+   // Bagi yang malas baca:
+   //    Kedua variabel di bawah ini akan digunakan untuk membuat Custom Hooks yang akan
+   //    kita gunakan agar TypeScript mengerti tipe data yang digunakan untuk masing masing
+   //    Reducer function yang dipilih (action dispatcher) dan
+   //    tipe data dari State yang bisa dipilih (state selector)
+
+   // Ingat bahwa dengan menggunakan TypeScript kita SANGAT MENGINGINKAN pengetahuan
+   // tentang tipe data serta props apa saja yang dibutuhkan untuk sebuah variabel / fungsi,
+   // TIDAK HANYA SEKEDAR any saja !
+
+   // Yaitu State global (kita sebut dengan RootState)
+   export type RootState = ReturnType<typeof store.getState>;
+
+   // Dan Dispatch yang bisa membaca seluruh dispatch yang ada (kita sebut AppDispatch)
+   export type AppDispatch = typeof store.dispatch;
+   ```
+
+   **(Sambil di-copy-paste sambil dibaca yah comment-nya !)**
+
+1. Selanjutnya kita akan memodifikasi file `/routers/index.tsx` sehingga tidak menggunakan loader data api lagi. Modifikasi file `/src/routers/index.tsx` menjadi sebagai berikut:
+
+   (Lihat: `TODO: RTK Query - Comot Semua Comments`)
+
+   ```ts
+   import { createBrowserRouter, redirect } from "react-router-dom";
+
+   // TODO: RTK Query - Comot semua Comments (4)
+   // Comment type ini karena tidak digunakan lagi di sini
+   // import { type Comment } from "../schemas/comment";
+
+   import BaseLayout from "../layouts/BaseLayout";
+   import FormPage from "../pages/FormPage";
+   import TablePage from "../pages/TablePage";
+   import CounterPage from "../pages/CounterPage";
+   import CommentDetailPage from "../pages/CommentDetailPage";
+
+   const router = createBrowserRouter([
+     {
+       element: <BaseLayout />,
+       errorElement: <h1>Terjadi sebuah error</h1>,
+       children: [
+         // Kita tambahkan kode awalnya sehingga selalu redirect ke halaman "/counter"
+         // apabila menuju halaman "/" yah !
+         {
+           path: "/",
+           loader: () => {
+             return redirect("counter");
+           },
+         },
+         {
+           path: "form",
+           element: <FormPage />,
+         },
+         {
+           path: "table",
+           element: <TablePage />,
+           // TODO: RTK Query - Comot semua Comments (3)
+           // Karena kita tidak menggunakan loader lagi, maka fungsi ini kita comment
+           // loader: async ({ request }: { request: Request }) => {
+           //   console.log(request);
+
+           //   try {
+           //     const response = await fetch(
+           //       "https://jsonplaceholder.typicode.com/comments"
+           //     );
+
+           //     if (!response.ok) {
+           //       const body = await response.text();
+           //       throw new Error(body);
+           //     }
+
+           //     const responseJson: Comment[] = await response.json();
+
+           //     return responseJson;
+           //   } catch (err) {
+           //     if (typeof err === "string") {
+           //       console.log(err);
+           //     }
+           //   }
+           // },
+
+           children: [
+             {
+               path: ":id",
+               element: <CommentDetailPage />,
+             },
+           ],
+         },
+         {
+           path: "counter",
+           element: <CounterPage />,
+         },
+       ],
+     },
+     // TODO: baseLayout - Import Layout dan Pages (4)
+     // Di sini kita menggunakan Catch All / Splats untuk menerima 404
+     // Splats / Catch All / Router 404
+     {
+       path: "*",
+       element: <h1>Not Found Oi !</h1>,
+     },
+   ]);
+
+   export default router;
+   ```
+
+   **(Sambil di-copy-paste sambil dibaca yah comment-nya !)**
+
+1. Selanjutnya kita akan memodifikasi file `TablePage.tsx` supaya bisa menggunakan `RTK Query` yang dipakai. Buka kembali file `/src/pages/TablePage.tsx` kemudian modifikasi kodenya menjadi seperti berikut:
+
+   (Lihat: `TODO: RTK Query - Comot Semua Comments`)
+
+   ```ts
+   import { type Comment } from "../schemas/comment";
+   // TODO: RTK Query - Comot semua Comments (5)
+   // Comment useLoaderData karena sudah tidak digunakan lagi
+   // import { useLoaderData } from "react-router-dom";
+
+   import { Outlet, useNavigate } from "react-router-dom";
+
+   // TODO: RTK Query - Comot semua Comments (6)
+   // Import Hooks yang dibutuhkan di sini
+   import { useGetCommentsQuery } from "../services/jsonplaceholder";
+
+   const TablePage = () => {
+     // TODO: RTK Query - Comot semua Comments (7)
+     // Comment si comments yang menggunakan useLoaderData
+     // let comments = useLoaderData() as Comment[];
+
+     // TODO: RTK Query - Comot semua Comments (8)
+     // Di sini kita akan gunakan kembalian data dari Hooks yang sudah diimport
+     // Untuk melihat kembaliannya ada apa saja, kita bisa baca di dokumentasi berikut:
+     // https://redux-toolkit.js.org/rtk-query/usage/queries#frequently-used-query-hook-return-values
+
+     // Yang akan kita gunakan di sini hanyalah "data" saja
+
+     // FYI:
+     // - Untuk manual refetch, coba lihat property "refetch" yah !
+     // - Ada juga yang cukup umum digunakan, yaitu "isLoading" dan "isError"
+
+     // Supaya tidak mengubah kode terlalu banyak, kita akan menggunakan
+     // alias dengan nama "comments"
+
+     // Perhatikan tipe data dari "data" yang ada di sini
+     // Bisa Comment[] ATAU undefined !
+     let { data: comments } = useGetCommentsQuery();
+
+     const eachRowButtonDeleteOnClickHandler = (data: Comment) => {
+       // TODO: RTK Query - Comot semua Comments (9)
+       // Karena di sini comments sudah bisa undefined, maka kita harus menggunakan
+       // Optional Chaining (?.)
+       let filteredComments = comments?.filter(
+         (comment) => comment.id !== data.id
+       );
+
+       // Sebenarnya di sini tetap kurang bisa digunakan
+       // Karena seharusnya di sini menggunakan refetch
+       comments = filteredComments;
+     };
+
+     const navigate = useNavigate();
+     const eachRowButtonDetailOnClickHandler = (data: Comment) => {
+       navigate(`/table/${data.id}`);
+     };
+
+     return (
+       <>
+         <p>Ini adalah halaman Table</p>
+
+         <Outlet />
+
+         <table>
+           <thead>
+             <tr>
+               <th>Id</th>
+               <th>Email</th>
+               <th>Body</th>
+               <th>Action</th>
+             </tr>
+           </thead>
+           <tbody>
+             {/* // TODO: RTK Query - Comot semua Comments (10) */}
+             {/* // Karena di sini bisa undefined, gunakan Optional Chaining (?.) */}
+             {comments?.map((comment) => (
+               <tr key={comment.id}>
+                 <td>{comment.id}</td>
+                 <td>{comment.email}</td>
+                 <td>{comment.body}</td>
+                 <td>
+                   <button
+                     onClick={() => eachRowButtonDetailOnClickHandler(comment)}
+                   >
+                     Detail
+                   </button>
+                   <button
+                     onClick={() => eachRowButtonDeleteOnClickHandler(comment)}
+                   >
+                     Delete
+                   </button>
+                 </td>
+               </tr>
+             ))}
+           </tbody>
+         </table>
+       </>
+     );
+   };
+
+   export default TablePage;
+   ```
+
+   **(Sambil di-copy-paste sambil dibaca yah comment-nya !)**
+
+Sampai pada titik ini, artinya kita sudah berhasil untuk melakukan pencomotan data dari `jsonplaceholder` dengan menggunakan `RTK Query` versi TypeScript dengan baik.
+
+Cukup mudah bukan 😊 ?
