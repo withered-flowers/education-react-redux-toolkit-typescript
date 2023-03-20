@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, redirect } from "react-router-dom";
 
 import { type Comment } from "../schemas/comment";
 
@@ -13,6 +13,14 @@ const router = createBrowserRouter([
     element: <BaseLayout />,
     errorElement: <h1>Terjadi sebuah error</h1>,
     children: [
+      // Kita tambahkan kode awalnya sehingga selalu redirect ke halaman "/counter"
+      // apabila menuju halaman "/" yah !
+      {
+        path: "/",
+        loader: () => {
+          return redirect("counter");
+        },
+      },
       {
         path: "form",
         element: <FormPage />,

@@ -1,7 +1,14 @@
 // Pada file ini kita akan membuat store yang dibutuhkan
 // Anggap saja store ini adalah file utama untuk State Management yang kita miliki
 
+// Ingat bahwa pada app/store.ts ini hanya berisi fungsi fungsi yang kita butuhkan
+// untuk menggunakan RTK, sehingga di sini selalu HANYALAH fungsi saja
+// ekstensi filenya adalah .ts, bukan .tsx !
+
 // Di sini kita harus menggunakan fungsi bawaan dari RTK yang bernama configureStore
+
+// INGAT (untuk pengguna Redux yang lama):
+// - Kita tidak menggunakan createStore / legacy_createStore lagi yah di sini !
 import { configureStore } from "@reduxjs/toolkit";
 
 // Yang diexport secara default dari counterSlice adalah counterSlice.reducers
@@ -29,6 +36,16 @@ export const store = configureStore({
 // Ada beberapa variabel khusus TypeScript yang harus digunakan
 
 // https://redux-toolkit.js.org/tutorials/typescript#define-root-state-and-dispatch-types
+
+// Bagi yang malas baca:
+//    Kedua variabel di bawah ini akan digunakan untuk membuat Custom Hooks yang akan
+//    kita gunakan agar TypeScript mengerti tipe data yang digunakan untuk masing masing
+//    Reducer function yang dipilih (action dispatcher) dan
+//    tipe data dari State yang bisa dipilih (state selector)
+
+// Ingat bahwa dengan menggunakan TypeScript kita SANGAT MENGINGINKAN pengetahuan
+// tentang tipe data serta props apa saja yang dibutuhkan untuk sebuah variabel / fungsi,
+// TIDAK HANYA SEKEDAR any saja !
 
 // Yaitu State global (kita sebut dengan RootState)
 export type RootState = ReturnType<typeof store.getState>;
